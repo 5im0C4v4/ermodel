@@ -1,8 +1,26 @@
-/*
+.ermodel-preview {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+.ermodel-preview-image {
+	min-height: 3rem;
+}
 
-If your plugin does not need CSS, delete this file.
+.ermodel-preview-image-file {
+	display: block;
+	height: auto;
+	margin: 0 auto;
+	max-width: 100%;
+}
 
-*/
+.ermodel-preview-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.ermodel-notice {
+	color: var(--text-muted);
+}
