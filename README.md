@@ -6,7 +6,7 @@ An Obsidian desktop plugin for embedding PNG previews of ER diagrams created wit
 
 - Obsidian desktop
 - Java 11 or later available as `java` on `PATH`
-- `jder.jar` placed at `ERModel/jder.jar` in the vault
+- `JDER.jar` placed at `ERModel/JDER.jar` in the vault
 
 The plugin does not download or update JDER.
 
@@ -20,6 +20,6 @@ file: customer.json
 ```
 ````
 
-In JDER, create or open the diagram and save its JSON file to `ERModel/json/customer.json`. Export its PNG preview to `ERModel/png/customer.png`. The code block displays the PNG and provides **Refresh preview** and **Launch jder** buttons.
+The **Launch diagram editor** button opens the block's JSON file directly and gives JDER its matching PNG path. For example, `customer.json` uses `ERModel/png/customer.png`. JDER updates the PNG automatically while editing; use **Refresh preview** in the note to reload the image.
 
-JDER does not currently accept a diagram path as a command-line argument, so **Launch jder** starts the application; open the JSON file from JDER using **File → Open Diagram**.
+Save the JSON from JDER (or enable JDER's autosave) to persist diagram changes. If the JSON file does not exist yet, JDER opens a new ER diagram for that path.

@@ -11,7 +11,7 @@ import {
 } from 'obsidian';
 
 const JDER_ROOT = 'ERModel';
-const JDER_JAR = `${JDER_ROOT}/jder.jar`;
+const JDER_JAR = `${JDER_ROOT}/JDER.jar`;
 const DIAGRAMS_FOLDER = `${JDER_ROOT}/json`;
 const PREVIEWS_FOLDER = `${JDER_ROOT}/png`;
 
@@ -75,7 +75,7 @@ async function renderJderBlock(
 		text: 'Refresh preview',
 	});
 	const launchButton = actions.createEl('button', {
-		text: 'Launch jder',
+		text: 'Launch diagram editor',
 	});
 
 	const renderImage = async (): Promise<void> => {
@@ -112,7 +112,7 @@ async function renderJderBlock(
 		});
 	});
 	launchButton.addEventListener('click', () => {
-		void launchJder(plugin.app, diagramPath);
+		void launchJder(plugin.app, diagramPath, previewPath);
 	});
 
 	await renderImage().catch((error: unknown) => {
@@ -122,40 +122,54 @@ async function renderJderBlock(
 	});
 }
 
-async function launchJder(app: App, diagramPath: string): Promise<void> {
+async function launchJder(
+	app: App,
+	diagramPath: string,
+	previewPath: string,
+): Promise<void> {
 	try {
 		if (!(await app.vault.adapter.exists(JDER_JAR))) {
-			new Notice(`Place Jder.jar at ${JDER_JAR} in your vault.`);
+			new Notice(`Place JDER.jar at ${JDER_JAR} in your vault.`);
 			return;
 		}
 		if (!(app.vault.adapter instanceof FileSystemAdapter)) {
-			new Notice('Jder can only be launched from a desktop vault.');
+			new Notice('The diagram editor is only available in a desktop vault.');
 			return;
 		}
 
 		const jarPath = app.vault.adapter.getFullPath(JDER_JAR);
-		const diagramExists = await app.vault.adapter.exists(diagramPath);
-		const child = spawn('java', ['-jar', jarPath], {
-			detached: true,
-			stdio: 'ignore',
-			windowsHide: true,
+		const diagramFullPath = app.vault.adapter.getFullPath(diagramPath);
+		const previewFullPath = app.vault.adapter.getFullPath(previewPath);
+		const jder = spawn(
+			'java',
+			[
+				'-jar',
+				jarPath,
+				'--json',
+				diagramFullPath,
+				'--png',
+				previewFullPath,
+			],
+			{
+				detached: true,
+				stdio: 'ignore',
+				windowsHide: true,
+			},
+		);
+		jder.once('error', (error: Error) => {
+			new Notice(`Could not launch JDER: ${error.message}`);
 		});
-		child.once('error', (error: Error) => {
-			new Notice(`Could not launch Jder: ${error.message}`);
-		});
-		child.once('exit', (code) => {
+		jder.once('exit', (code) => {
 			if (code !== null && code !== 0) {
-				new Notice(`Jder exited with code ${code}.`);
+				new Notice(`JDER exited with code ${code}.`);
 			}
 		});
-		child.unref();
+		jder.unref();
 		new Notice(
-			diagramExists
-				? `Launching Jder. Open ${diagramPath} from Jder's File → Open Diagram menu.`
-				: `Launching Jder. Create a diagram and save it as ${diagramPath}.`,
+			`Launching JDER with ${diagramPath}. Save the JSON in JDER to keep the diagram file updated; the PNG preview exports automatically.`,
 		);
 	} catch (error) {
-		new Notice(`Could not launch Jder: ${errorMessage(error)}`);
+		new Notice(`Could not launch JDER: ${errorMessage(error)}`);
 	}
 }
 
@@ -193,10 +207,12 @@ class JderBlockModal extends Modal {
 				submit();
 			}
 		});
-		this.contentEl.createEl('button', {
+		const submitButton = this.contentEl.createEl('button', {
 			text: 'Insert block',
 			cls: 'mod-cta',
-		}).addEventListener('click', submit);
+		});
+		submitButton.addClass('ermodel-modal-submit');
+		submitButton.addEventListener('click', submit);
 	}
 
 	onClose(): void {
